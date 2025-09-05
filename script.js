@@ -60,7 +60,20 @@ if (!user_key) {
         },
         body: JSON.stringify({ userKey: user_key }),
     })
-    .then(response => response.json())
+    .then(response => {
+        // Check if response is OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Check content type to ensure it's JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Response is not JSON');
+        }
+        
+        return response.json();
+    })
     .then(response => {
         if (response.status === 'success') {
             const data = response.data;
@@ -82,6 +95,10 @@ if (!user_key) {
     })
     .catch(error => {
         console.error('Fetch error:', error);
+        // Log more details about the error
+        if (error.message === 'Response is not JSON') {
+            console.error('Server returned non-JSON response. Check if fetchUserData.php exists and returns valid JSON.');
+        }
     });
 }
 
